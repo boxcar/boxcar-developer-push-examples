@@ -1,0 +1,32 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.2'
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.5
+version = '1.0'
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Boxcar Java Publisher Client Demo', 'Implementation-Version': version
+    }
+}
+
+dependencies {
+    compile 'org.apache.httpcomponents:httpclient:4.3.5'
+    compile 'com.google.code.gson:gson:2.3'
+    compile 'log4j:log4j:1.2.17'
+}
