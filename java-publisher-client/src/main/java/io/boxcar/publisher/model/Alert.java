@@ -3,16 +3,14 @@ package io.boxcar.publisher.model;
 import io.boxcar.publisher.client.util.TimeUtils;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
+/**
+ * Represents the "content" to be published
+ * @author jpcarlino
+ *
+ */
 public class Alert {
-	
-	private static long counter;
-	
-	static {
-		counter = 0;
-	}
 	
 	public class Aps {
 		String badge;
@@ -22,8 +20,11 @@ public class Alert {
 	
 	Aps aps;
 	List<String> tags;
+	List<String> target_os;
+	List<Integer> client_ids;
 	String id;
 	long expires;
+	List<String> device_tokens;
 	
 	public Alert(String text) {
 		this.aps = new Aps();
@@ -32,9 +33,10 @@ public class Alert {
 		this.aps.alert = text;
 		this.tags = new ArrayList<String>();
 		this.tags.add("@all");
-		String id = String.valueOf(Calendar.getInstance().getTimeInMillis()) + 
-			    String.valueOf(counter++);
-		this.id = id;
+		this.id = null;
+		this.target_os = null;
+		this.client_ids = null;
+		this.device_tokens = null;
 		setTimeToLive(30000);
 	}
 	
@@ -46,6 +48,9 @@ public class Alert {
 		this.tags = new ArrayList<String>();
 		this.tags.add("@all");
 		this.id = id;
+		this.target_os = null;
+		this.client_ids = null;
+		this.device_tokens = null;
 		setTimeToLive(30000);
 	}
 
@@ -92,4 +97,34 @@ public class Alert {
 	public void setTimeToLive(long millis) {
 		this.expires = TimeUtils.getExpiryDate(millis).getTime() / 1000;
 	}
+
+	public List<String> getTargetOS() {
+		return target_os;
+	}
+
+	public void setTargetOS(List<String> targetOS) {
+		this.target_os = targetOS;
+	}
+	
+	public void setTargetOS(String targetOS) {
+		this.target_os = new ArrayList<String>();
+		this.target_os.add(targetOS);
+	}
+
+	public List<Integer> getClientIds() {
+		return client_ids;
+	}
+
+	public void setClientIds(List<Integer> clientIds) {
+		this.client_ids = clientIds;
+	}
+
+	public List<String> getDeviceTokens() {
+		return device_tokens;
+	}
+
+	public void setDeviceTokens(List<String> deviceTokens) {
+		this.device_tokens = deviceTokens;
+	}
+	
 }

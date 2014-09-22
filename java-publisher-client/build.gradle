@@ -16,12 +16,15 @@ repositories {
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'application'
 
 sourceCompatibility = 1.5
 version = '1.0'
+mainClassName = 'io.boxcar.publisher.Demo'
+
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Boxcar Java Publisher Client Demo', 'Implementation-Version': version
+        attributes 'Implementation-Title': 'Boxcar Java Publisher Client Demo', 'Implementation-Version': version, 'Main-Class': 'io.boxcar.publisher.Demo'
     }
 }
 

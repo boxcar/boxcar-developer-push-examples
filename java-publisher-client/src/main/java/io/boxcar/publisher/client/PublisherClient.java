@@ -15,6 +15,12 @@ import io.boxcar.publisher.client.builder.impl.BasicAuthPublishStrategy;
 import io.boxcar.publisher.client.builder.impl.UrlSignaturePublishStrategy;
 import io.boxcar.publisher.model.Alert;
 
+/**
+ * This is the HTTP client responsible for publishing contents
+ * to the Boxcar Push Platform
+ * @author jpcarlino
+ *
+ */
 public class PublisherClient {
 	
 	static Logger logger;
