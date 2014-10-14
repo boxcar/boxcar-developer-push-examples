@@ -38,3 +38,11 @@ by this:
 Type and execute the following statement in your command shell:
 
     gradle run
+
+If you want to pass your own text from command line:
+
+    gradle run -PappArgs="['--text', 'This is a test push']"
+
+or
+
+    gradle run -PappArgs="['--file', '/home/user/a_text_file.txt']"

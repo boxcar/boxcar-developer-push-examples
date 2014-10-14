@@ -1,5 +1,7 @@
 package io.boxcar.publisher;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -51,11 +53,12 @@ public class Demo {
 		// 2. Publish
 		
 		try {
-			Alert alert = new Alert("Hello World!");
+			StringBuffer text = getText(args);
+			Alert alert = new Alert(text.toString());
 			// remove this line if you just want to send it to all registered
 			// devices
 			alert.setTargetOS("android");
-			
+		
 			publisherClient.publish(alert);
 			
 		} catch (IOException e) {
@@ -70,5 +73,29 @@ public class Demo {
 		PUBLISH_KEY = properties.getProperty(PROP_PUBLISH_KEY);
 		PUBLISH_SECRET = properties.getProperty(PROP_PUBLISH_SECRET);
 		PUBLISH_URL = properties.getProperty(PROP_URL);
+	}
+	
+	private static StringBuffer getText(String[] args) throws IOException {
+		StringBuffer text = new StringBuffer();
+		if (args.length > 0) {
+			if (args[0].toLowerCase().trim().equals("--file")) {
+				String filename = args[1].trim();
+				FileReader fileReader = new FileReader(filename);
+				BufferedReader bufferedReader = new BufferedReader(fileReader);
+				String line;
+				while ((line = bufferedReader.readLine()) != null) {
+					text.append(line);
+					text.append("\n");
+				}
+				fileReader.close();
+			} else if (args[0].toLowerCase().trim().equals("--text")) {
+				text.append(args[1].trim());
+			} else {
+				text.append("Hello World!");
+			}
+		} else {
+			text.append("Hello World!");
+		}
+		return text;
 	}
 }
