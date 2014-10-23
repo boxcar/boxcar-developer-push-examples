@@ -16,7 +16,7 @@ public class Notifications extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
-        zeroPush = new ZeroPush("zeropush-api-key", "gcm-project-number", this);
+        zeroPush = new ZeroPush("zeropush-app-token", "gcm-project-number", this);
         zeroPush.registerForRemoteNotifications();
     }
 
@@ -25,7 +25,6 @@ public class Notifications extends Activity {
         super.onResume();
         zeroPush.registerForRemoteNotifications();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
