@@ -5,13 +5,25 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.zeropush.sdk.ZeroPush;
+
 
 public class Notifications extends Activity {
+
+    private ZeroPush zeroPush;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
+        zeroPush = new ZeroPush("zeropush-api-key", "gcm-project-number", this);
+        zeroPush.registerForRemoteNotifications();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        zeroPush.registerForRemoteNotifications();
     }
 
 
