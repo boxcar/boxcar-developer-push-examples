@@ -71,8 +71,18 @@ Setup
             <category android:name="com.zeropush.zeropush_gcm_demo" />
         </intent-filter>
     </receiver>
+    
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+
+    <permission android:name="com.zeropush.zeropush_gcm_demo.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.zeropush.zeropush_gcm_demo.permission.C2D_MESSAGE" />
   </application>
   ```
+  Remember to replace `com.zeropush.zeropush_gcm_demo` with the package of your app.
 
 Handle a Push Notification
 ---
