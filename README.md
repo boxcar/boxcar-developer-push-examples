@@ -30,15 +30,15 @@ Setup
 
 1. Call setup method in main activity.
   ```java
-      private ZeroPush zeroPush;
+  private ZeroPush zeroPush;
 
-      @Override
-      protected void onCreate(Bundle savedInstanceState) {
-          super.onCreate(savedInstanceState);
-          setContentView(R.layout.activity_notifications);
-          zeroPush = new ZeroPush("zeropush-app-token", "gcm-project-number", this);
-          zeroPush.registerForRemoteNotifications();
-      }
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
+      setContentView(R.layout.activity_notifications);
+      zeroPush = new ZeroPush("zeropush-app-token", "gcm-project-number", this);
+      zeroPush.registerForRemoteNotifications();
+  }
   ```
 
   You will probably want to register again in the `onResume` method as
@@ -47,57 +47,57 @@ Setup
 
 1. Add a receiver to handle the received push notifications and subclass ZeroPushBroadcastReceiver:
   ```java
-    public class IntentReceiver extends ZeroPushBroadcastReceiver {
-      @Override
-      public void onPushReceived(Context context, Intent intent, Bundle extras) {
-          Log.d("PushReceived", extras.toString());
-      }
+  public class IntentReceiver extends ZeroPushBroadcastReceiver {
+    @Override
+    public void onPushReceived(Context context, Intent intent, Bundle extras) {
+        Log.d("PushReceived", extras.toString());
     }
+  }
   ```
 
 
 1. Add permissions to `AndroidManifest.xml`. Now that we have a class to acts
    as the receiver, we need to configure it inside of `<application>` add the following stanza:
   ```xml
-    <application>
-      ...
-      <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
-      <receiver
-          android:name=".IntentReceiver"
-          android:permission="com.google.android.c2dm.permission.SEND" >
-          <intent-filter>
-              <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-              <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-              <category android:name="com.zeropush.zeropush_gcm_demo" />
-          </intent-filter>
-      </receiver>
-    </application>
+  <application>
+    ...
+    <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+    <receiver
+        android:name=".IntentReceiver"
+        android:permission="com.google.android.c2dm.permission.SEND" >
+        <intent-filter>
+            <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+            <category android:name="com.zeropush.zeropush_gcm_demo" />
+        </intent-filter>
+    </receiver>
+  </application>
   ```
 
 Handle a Push Notification
 ---
 
 1. Create a simple notification to display
-```java
-public class IntentReceiver extends ZeroPushBroadcastReceiver {
-    @Override
-    public void onPushReceived(Context context, Intent intent, Bundle extras) {
+  ```java
+  public class IntentReceiver extends ZeroPushBroadcastReceiver {
+      @Override
+      public void onPushReceived(Context context, Intent intent, Bundle extras) {
 
-        NotificationManager manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, Notifications.class), 0);
+          NotificationManager manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+          PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, Notifications.class), 0);
 
-        Notification notification = new Notification.Builder(context)
-                .setContentTitle("Got it!")
-                .setContentText(extras.toString())
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setContentIntent(pendingIntent)
-                .build();
+          Notification notification = new Notification.Builder(context)
+                  .setContentTitle("Got it!")
+                  .setContentText(extras.toString())
+                  .setSmallIcon(R.drawable.ic_launcher)
+                  .setContentIntent(pendingIntent)
+                  .build();
 
-        manager.notify(1, notification);
-    }
-}
+          manager.notify(1, notification);
+      }
+  }
 
-```
+  ```
 
 
 Send a broadcast
