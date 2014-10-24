@@ -9,9 +9,9 @@ Background
 ZeroPush uses GCM's CCS(XMPP) gateway for sending push notifications. The XMPP
 protocol has a number of advantages. We maintain a persistent connection to GCM
 so there is low overhead when making many requests.  This also allows us to
-perform efficient broadcasts to all of your registered devices and are not
-limited to 10,000.
-We use the same efficient connection handling model we employ when sending push notifications through the APNS gateway.
+perform fast broadcasts to all of your registered devices and are not
+limited to 10,000. We use the same efficient connection handling model we employ
+when sending push notifications through the APNS gateway.
 
 Prerequisites
 ---
