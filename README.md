@@ -56,8 +56,8 @@ Setup
   ```
 
 
-1. Add permissions to `AndroidManifest.xml`. Now that we have a class to acts
-   as the receiver, we need to configure it inside of `<application>` add the following stanza:
+1. Add permissions to `AndroidManifest.xml`. Now that we have a class to act
+   as the receiver, we need to configure it inside of `<application>`. Add the following declarations:
   ```xml
   <application>
     ...
@@ -113,7 +113,7 @@ Handle a Push Notification
 Send a broadcast
 ---
 
-We support all of the CSS parameters documented here: https://developer.android.com/google/gcm/server.html
+We support all of the CCS parameters documented here: https://developer.android.com/google/gcm/server.html
 
 ```shell
 curl https://api.zeropush.com/broadcast \
