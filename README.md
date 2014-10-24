@@ -84,7 +84,7 @@ Handle a Push Notification
       public void onPushReceived(Context context, Intent intent, Bundle extras) {
 
           NotificationManager manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-          PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, Notifications.class), 0);
+          PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, YourMainActivity.class), 0);
 
           Notification notification = new Notification.Builder(context)
                   .setContentTitle("Got it!")
