@@ -22,7 +22,7 @@ Get a Project Number and API Key from Google Developers Console. Follow these
 Setup
 ---
 
-1. Create an Android app on the ZeroPush site. https://zeropush.com/apps/new?android
+1. Create an Android app on the ZeroPush site.
 
 1. Include the `zeropush-sdk` module in your project. In Android Studio:
   *File -> Import Module...*. When you reference the module, Android Studio should
