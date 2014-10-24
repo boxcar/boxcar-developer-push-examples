@@ -113,7 +113,7 @@ Handle a Push Notification
 Send a broadcast
 ---
 
-We support all of the CCS parameters documented here: https://developer.android.com/google/gcm/server.html
+We support all of the CCS parameters documented here: https://developer.android.com/google/gcm/server.html#params
 
 ```shell
 curl https://api.zeropush.com/broadcast \
