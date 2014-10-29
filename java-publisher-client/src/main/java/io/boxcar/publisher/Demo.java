@@ -58,7 +58,10 @@ public class Demo {
 			// remove this line if you just want to send it to all registered
 			// devices
 			alert.setTargetOS("android");
-		
+			// do not keep the push more than 2 minutes if device is not
+			// available
+		    alert.setTTL(120);
+		    
 			publisherClient.publish(alert);
 			
 		} catch (IOException e) {

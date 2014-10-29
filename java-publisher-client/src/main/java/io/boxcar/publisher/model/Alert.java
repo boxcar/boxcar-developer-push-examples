@@ -24,6 +24,7 @@ public class Alert {
 	List<Integer> client_ids;
 	String id;
 	long expires;
+	Integer expires_after;
 	List<String> device_tokens;
 	
 	public Alert(String text) {
@@ -37,7 +38,8 @@ public class Alert {
 		this.target_os = null;
 		this.client_ids = null;
 		this.device_tokens = null;
-		setTimeToLive(30000);
+		this.expires_after = null; // do not set TTL by default
+		setAPICallTimeToLive(30000);
 	}
 	
 	public Alert(String text, String id) {
@@ -51,7 +53,8 @@ public class Alert {
 		this.target_os = null;
 		this.client_ids = null;
 		this.device_tokens = null;
-		setTimeToLive(30000);
+		this.expires_after = null; // do not set TTL by default
+		setAPICallTimeToLive(30000);
 	}
 
 	public String getAlert() {
@@ -94,10 +97,26 @@ public class Alert {
 		this.id = id;
 	}
 
-	public void setTimeToLive(long millis) {
-		this.expires = TimeUtils.getExpiryDate(millis).getTime() / 1000;
+	/**
+	 * Sets the Time To Live (TTL) in seconds for this push.
+	 * This value is used by the gateway provider (Google GCM, Apple APNS,
+	 * Amazon ADM, etc) to know how much time to keep the push if device
+	 * is offline.
+	 * Ignored if value <= 0
+	 * @param millis TTL in milliseconds. It won't be considered for delivery
+	 * if <= 0
+	 */
+	public void setTTL(int seconds) {
+		this.expires_after = seconds;
 	}
-
+	
+	public int getTTL() {
+		if (expires_after == null) {
+			return -1;
+		}
+		return this.expires_after;
+	}
+	
 	public List<String> getTargetOS() {
 		return target_os;
 	}
@@ -125,6 +144,10 @@ public class Alert {
 
 	public void setDeviceTokens(List<String> deviceTokens) {
 		this.device_tokens = deviceTokens;
+	}
+
+	protected void setAPICallTimeToLive(long millis) {
+		this.expires = TimeUtils.getExpiryDate(millis).getTime() / 1000;
 	}
 	
 }
