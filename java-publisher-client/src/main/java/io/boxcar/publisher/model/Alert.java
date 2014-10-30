@@ -15,6 +15,7 @@ public class Alert {
 	public class Aps {
 		String badge;
 		String sound;
+		String category;
 		String alert;
 	}
 	
@@ -31,6 +32,7 @@ public class Alert {
 		this.aps = new Aps();
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
+		this.aps.category = null;
 		this.aps.alert = text;
 		this.tags = new ArrayList<String>();
 		this.tags.add("@all");
@@ -46,6 +48,7 @@ public class Alert {
 		this.aps = new Aps();
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
+		this.aps.category = null;
 		this.aps.alert = text;
 		this.tags = new ArrayList<String>();
 		this.tags.add("@all");
@@ -73,6 +76,14 @@ public class Alert {
 		aps.sound = sound;
 	}
 
+	public String getCategory() {
+		return aps.category;
+	}
+
+	public void setCategory(String category) {
+		aps.category = category;
+	}
+	
 	public String getBadge() {
 		return aps.badge;
 	}
