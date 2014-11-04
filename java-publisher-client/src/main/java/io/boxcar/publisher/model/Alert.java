@@ -5,6 +5,8 @@ import io.boxcar.publisher.client.util.TimeUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Represents the "content" to be published
  * @author jpcarlino
@@ -28,6 +30,9 @@ public class Alert {
 	Integer expires_after;
 	List<String> device_tokens;
 	
+	@SerializedName("@img")
+	String img;
+
 	public Alert(String text) {
 		this.aps = new Aps();
 		this.aps.badge = "auto";
@@ -41,6 +46,7 @@ public class Alert {
 		this.client_ids = null;
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
+		this.img = null;
 		setAPICallTimeToLive(30000);
 	}
 	
@@ -57,6 +63,7 @@ public class Alert {
 		this.client_ids = null;
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
+		this.img = null;
 		setAPICallTimeToLive(30000);
 	}
 
@@ -157,6 +164,14 @@ public class Alert {
 		this.device_tokens = deviceTokens;
 	}
 
+	public String getBigImageURL() {
+		return img;
+	}
+
+	public void setBigImageURL(String url) {
+		this.img = url;
+	}
+	
 	protected void setAPICallTimeToLive(long millis) {
 		this.expires = TimeUtils.getExpiryDate(millis).getTime() / 1000;
 	}
