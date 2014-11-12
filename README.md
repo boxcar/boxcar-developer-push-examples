@@ -17,12 +17,14 @@ Prerequisites
 ---
 
 Get a Project Number and API Key from Google Developers Console. Follow these
-[instructions](http://developer.android.com/google/gcm/gs.html).
+[instructions](https://zeropush.com/documentation/getting_started-gcm).
 
 Setup
 ---
 
-1. Create an Android app on the ZeroPush site.
+1. Create an Android app on the ZeroPush site and configure it with the API Key and Project Number.
+
+1. Clone this repo so you can include the `zeropush-sdk` module
 
 1. Include the `zeropush-sdk` module in your project. In Android Studio:
   *File -> Import Module...*. When you reference the module, Android Studio should
