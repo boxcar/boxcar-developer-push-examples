@@ -1,11 +1,21 @@
 package com.zeropush.zeropush_gcm_demo;
 
+import android.annotation.TargetApi;
+import android.os.StrictMode;
+import android.os.Build;
+
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.zeropush.sdk.ZeroPush;
+import com.zeropush.sdk.ZeroPushResponseHandler;
+
+import org.apache.http.Header;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class Notifications extends Activity {
@@ -17,13 +27,25 @@ public class Notifications extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
         zeroPush = new ZeroPush("zeropush-app-token", "gcm-project-number", this);
+        zeroPush.verifyCredentials(new ZeroPushResponseHandler(){
+            @Override
+            public void handle(JSONObject response, int statusCode, Error error) {
+                if(error != null) {
+                    Log.e("DemoApp", error.getMessage());
+                    return;
+                }
+                Log.d("DemoApp", response.toString());
+            }
+        });
+
         zeroPush.registerForRemoteNotifications();
+        activateStrictMode();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        zeroPush.registerForRemoteNotifications();
+        //zeroPush.registerForRemoteNotifications();
     }
 
     @Override
@@ -43,5 +65,13 @@ public class Notifications extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @TargetApi(9)
+    private void activateStrictMode() {
+        // Set the activity to Strict mode so that we get LogCat warnings when code misbehaves on the main thread.
+        if (BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
+        }
     }
 }
