@@ -165,7 +165,7 @@ public class ZeroPush {
             params.put("channel", channel);
         }
 
-        asyncRequest("POST", "/register", params);
+        asyncRequest("POST", "/register", params, null);
     }
 
     public void verifyCredentials(ZeroPushResponseHandler handler) {
@@ -179,8 +179,12 @@ public class ZeroPush {
      * @param channel
      */
     public void subscribeToChannel(String channel) {
+        subscribeToChannel(channel, null);
+    }
+
+    public void subscribeToChannel(String channel, ZeroPushResponseHandler handler) {
         RequestParams params = new RequestParams("auth_token", this.apiKey, "device_token", this.deviceToken, "channel", channel);
-        asyncRequest("POST", "/subscribe", params);
+        asyncRequest("POST", "/subscribe", params, handler);
     }
 
     /**
@@ -189,8 +193,11 @@ public class ZeroPush {
      * @param channel
      */
     public void unsubscribeFromChannel(String channel) {
+        unsubscribeFromChannel(channel, null);
+    }
+    public void unsubscribeFromChannel(String channel, ZeroPushResponseHandler handler) {
         RequestParams params = new RequestParams("auth_token", this.apiKey, "device_token", this.deviceToken, "channel", channel);
-        asyncRequest("POST", "/unsubscribe", params);
+        asyncRequest("POST", "/unsubscribe", params, handler);
     }
 
     /**
@@ -198,12 +205,19 @@ public class ZeroPush {
      *
      */
     public void unsubscribeFromAllChannels() {
+        unsubscribeFromAllChannels(null);
+    }
+    public void unsubscribeFromAllChannels(ZeroPushResponseHandler handler) {
         String url = String.format("/devices/%s", this.deviceToken);
         RequestParams params = new RequestParams("auth_token", this.apiKey, "channel_list", "");
-        asyncRequest("PUT", url, params);
+        asyncRequest("PUT", url, params, handler);
     }
 
-    public void getChannels() { }
+    public void getChannels(ZeroPushResponseHandler handler ) {
+        String url = String.format("/devices/%s", this.deviceToken);
+        RequestParams params = new RequestParams("auth_token", this.apiKey);
+        asyncRequest("GET", url, params, handler);
+    }
 
     /**
      * Replace the current channel subscriptions with the provided list.
@@ -211,16 +225,19 @@ public class ZeroPush {
      * @param channels
      */
     public void setChannels(List<String> channels) {
+        setChannels(channels, null);
+    }
+    public void setChannels(List<String> channels, ZeroPushResponseHandler handler) {
         String url = String.format("/devices/%s", this.deviceToken);
         RequestParams params = new RequestParams("auth_token", this.apiKey, "channel_list", join(channels.iterator(), ","));
-        asyncRequest("PUT", url, params);
-    }
-
-    private void asyncRequest(String verb, String url, RequestParams params) {
-        asyncRequest(verb, url, params, new ZeroPushResponseHandler());
+        asyncRequest("PUT", url, params, handler);
     }
 
     private void asyncRequest(String verb, String url, RequestParams params, ZeroPushResponseHandler handler) {
+        if(handler == null) {
+            handler = new ZeroPushResponseHandler();
+        }
+
         java.lang.reflect.Method method;
         try {
             Class[] types = new Class[]{String.class, RequestParams.class, ResponseHandlerInterface.class};
