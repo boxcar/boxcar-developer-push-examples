@@ -125,7 +125,7 @@ public class ZeroPush {
             SharedPreferences preferences = delegate.getSharedPreferences(TAG, delegate.getApplicationContext().MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
             editor.putString(getDeviceTokenKey(), deviceToken);
-            editor.commit();
+            editor.apply();
         }
     }
 
