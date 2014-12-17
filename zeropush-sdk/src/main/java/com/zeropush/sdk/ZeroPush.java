@@ -15,6 +15,7 @@ import android.util.Log;
 
 import org.apache.http.Header;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 import org.json.*;
@@ -164,13 +165,12 @@ public class ZeroPush {
             params.put("channel", channel);
         }
 
-        httpClient.post(String.format("%s/register", ZeroPushAPIHost), params, new JsonHttpResponseHandler() {
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                //if delegate, call the error method, otherwise log it.
-                Log.e(TAG, errorResponse.toString());
-            }
-        });
+        asyncRequest("POST", "/register", params);
+    }
+
+    public void verifyCredentials(ZeroPushResponseHandler handler) {
+        RequestParams params = new RequestParams("auth_token", this.apiKey);
+        asyncRequest("GET", "/verify_credentials", params, handler);
     }
 
     /**
@@ -180,15 +180,7 @@ public class ZeroPush {
      */
     public void subscribeToChannel(String channel) {
         RequestParams params = new RequestParams("auth_token", this.apiKey, "device_token", this.deviceToken, "channel", channel);
-        httpClient.post(
-                String.format("%s/subscribe", ZeroPushAPIHost),
-                params,
-                new JsonHttpResponseHandler() {
-                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                        Log.e(TAG, errorResponse.toString());
-                    }
-                }
-        );
+        asyncRequest("POST", "/subscribe", params);
     }
 
     /**
@@ -198,15 +190,7 @@ public class ZeroPush {
      */
     public void unsubscribeFromChannel(String channel) {
         RequestParams params = new RequestParams("auth_token", this.apiKey, "device_token", this.deviceToken, "channel", channel);
-        httpClient.post(
-                String.format("%s/unsubscribe", ZeroPushAPIHost),
-                params,
-                new JsonHttpResponseHandler() {
-                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                        Log.e(TAG, errorResponse.toString());
-                    }
-                }
-        );
+        asyncRequest("POST", "/unsubscribe", params);
     }
 
     /**
@@ -214,17 +198,9 @@ public class ZeroPush {
      *
      */
     public void unsubscribeFromAllChannels() {
-        String url = String.format("%s/devices/%s", ZeroPushAPIHost, this.deviceToken);
+        String url = String.format("/devices/%s", this.deviceToken);
         RequestParams params = new RequestParams("auth_token", this.apiKey, "channel_list", "");
-        httpClient.put(
-                url,
-                params,
-                new JsonHttpResponseHandler() {
-                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                        Log.e(TAG, errorResponse.toString());
-                    }
-                }
-        );
+        asyncRequest("PUT", url, params);
     }
 
     public void getChannels() { }
@@ -235,18 +211,33 @@ public class ZeroPush {
      * @param channels
      */
     public void setChannels(List<String> channels) {
-        String url = String.format("%s/devices/%s", ZeroPushAPIHost, this.deviceToken);
+        String url = String.format("/devices/%s", this.deviceToken);
         RequestParams params = new RequestParams("auth_token", this.apiKey, "channel_list", join(channels.iterator(), ","));
+        asyncRequest("PUT", url, params);
+    }
 
-        httpClient.put(
-                url,
-                params,
-                new JsonHttpResponseHandler() {
-                    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                        Log.e(TAG, errorResponse.toString());
-                    }
-                }
-        );
+    private void asyncRequest(String verb, String url, RequestParams params) {
+        asyncRequest(verb, url, params, new ZeroPushResponseHandler());
+    }
+
+    private void asyncRequest(String verb, String url, RequestParams params, ZeroPushResponseHandler handler) {
+        java.lang.reflect.Method method;
+        try {
+            Class[] types = new Class[]{String.class, RequestParams.class, ResponseHandlerInterface.class};
+            method = httpClient.getClass().getMethod(verb.toLowerCase(), types);
+            method.invoke(
+                    httpClient,
+                    ZeroPushAPIHost + url,
+                    params,
+                    handler);
+
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean isGooglePlayServicesAvailable() {
