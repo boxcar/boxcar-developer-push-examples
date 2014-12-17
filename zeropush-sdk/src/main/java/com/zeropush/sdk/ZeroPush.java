@@ -51,7 +51,7 @@ public class ZeroPush {
         this.apiKey = apiKey;
         this.senderId = senderId;
         this.delegate = delegate;
-        this.httpClient.setUserAgent(UserAgent);
+        httpClient.setUserAgent(UserAgent);
         sharedInstance = this;
     }
 
@@ -60,35 +60,38 @@ public class ZeroPush {
             Log.e(TAG, "No valid Google Play Services APK found.");
             return;
         }
-
-        gcm = GoogleCloudMessaging.getInstance(delegate.getApplicationContext());
-        deviceToken = getDeviceToken();
-        if(deviceToken.isEmpty()){
-            doRegistrationInBackground();
-        }
+        doRegistrationInBackground();
     }
 
     private void doRegistrationInBackground() {
         new AsyncTask<Void,Void,String>() {
             @Override
             protected String doInBackground(Void... params) {
-                String message = "";
+                String token = getDeviceToken();
+
                 try {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(delegate.getApplicationContext());
                     }
-                    deviceToken = gcm.register(senderId);
-                    message = deviceToken;
-                    setDeviceToken(deviceToken);
-                    registerDeviceToken(deviceToken);
+
+                    if(token == null || token.isEmpty()) {
+                        token = gcm.register(senderId);
+                        setDeviceToken(token);
+                        Log.d(TAG, "Received token: " + token);
+                    } else {
+                        Log.d(TAG, "Reusing token: " + token);
+                    }
                 } catch (IOException ex) {
-                    message = ex.getMessage();
                     // If there is an error, don't just keep trying to register.
                     // Require the user to click a button again, or perform
                     // exponential back-off.
+                    Log.e(TAG, ex.getMessage());
                 }
+                return token;
+            }
 
-                return message;
+            protected void onPostExecute(String deviceToken) {
+                registerDeviceToken(deviceToken);
             }
         }.execute(null, null, null);
     }
