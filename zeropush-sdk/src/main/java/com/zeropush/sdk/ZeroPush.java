@@ -266,8 +266,7 @@ public class ZeroPush {
         }
         final String first = iterator.next();
         if (!iterator.hasNext()) {
-            final String result = first;
-            return result;
+            return first;
         }
 
         // two or more elements
