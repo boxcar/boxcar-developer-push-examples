@@ -24,21 +24,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
-
-/*
-interface ZeroPushDelegate {
-    public void registrationDidFail(Error error);
-    public void subscribeDidFail(Error error);
-    public void unsubscribeDidFail(Error error);
-    public void setBadgeDidFail(Error error);
-}
-*/
-
 public class ZeroPush {
 
-//    public static final String ZeroPushAPIHost = "https://api.zeropush.com";
-    public static final String ZeroPushAPIHost = "http://localhost:3000/api";
     public static final String Version = "0.0.1";
+    public static final String ZeroPushAPIHost = "https://api.zeropush.com";
     static final String TAG = "ZeroPush-GCM-SDK";
 
     static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
