@@ -27,8 +27,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 public class ZeroPush {
 
-    public static final String Version = "0.0.1";
     public static final String ZeroPushAPIHost = "https://api.zeropush.com";
+    public static final String Version = "1.0.2";
     static final String TAG = "ZeroPush-GCM-SDK";
 
     static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
