@@ -45,7 +45,7 @@ public class BasicAuthPublishStrategy implements PublishStrategy {
 		StringEntity content;
 		content = new StringEntity(body);
 		
-		logger.debug("Alert content: " + body);
+		logger.debug("Request body: " + body);
 		
 		HttpPost httpPost = new HttpPost(url);
 		httpPost.setEntity(content);

@@ -23,7 +23,7 @@ public class UrlSignaturePublishStrategy implements PublishStrategy {
 
 	static Logger logger;
 	static {
-		logger = Logger.getLogger(BasicAuthPublishStrategy.class);
+		logger = Logger.getLogger(UrlSignaturePublishStrategy.class);
 	}
 
 	CloseableHttpClient httpclient;
@@ -39,8 +39,8 @@ public class UrlSignaturePublishStrategy implements PublishStrategy {
 		
 		StringEntity content;
 		content = new StringEntity(body);
-		
-		logger.debug("Alert content: " + body);
+
+        logger.debug("Request body: " + body);
 		
 		URI uriWithURLParams;
 		try {
