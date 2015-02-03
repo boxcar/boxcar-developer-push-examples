@@ -5,21 +5,24 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 
-import io.boxcar.publisher.client.builder.PublishStrategy;
+import io.boxcar.publisher.client.builder.RequestStrategy;
 import io.boxcar.publisher.client.util.Signature;
 
-public class UrlSignaturePublishStrategy implements PublishStrategy {
+public class UrlSignaturePublishStrategy implements RequestStrategy {
 
 	static Logger logger;
 	static {
@@ -67,7 +70,54 @@ public class UrlSignaturePublishStrategy implements PublishStrategy {
 		return response;
 	}
 
-	public void closeClient() throws IOException {
+    @Override
+    public CloseableHttpResponse get(Map<String, String> content, URI baseUrl, String publishKey, String publishSecret) throws IOException {
+
+        URIBuilder uriBuilder = new URIBuilder(baseUrl);
+
+        for (Map.Entry<String, String> entry : content.entrySet()) {
+            uriBuilder.addParameter(entry.getKey(), entry.getValue());
+        }
+
+        URI url = null;
+
+        try {
+            url = uriBuilder.build();
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        String payload = "";
+        String signature = Signature.sign("GET", url.getHost(), url.getPath(),
+                                          payload, publishSecret);
+
+        logger.debug("GET request URL: " + url);
+
+        URI uriWithURLParams;
+        try {
+            uriWithURLParams = new URI(url.getScheme(),
+                    url.getAuthority(), url.getPath(),
+                    String.format("publishkey=%s&signature=%s", publishKey, signature),
+                    url.getFragment());
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(header);
+
+        HttpGet httpGet = new HttpGet(uriWithURLParams);
+
+        httpclient = HttpClients.custom().setDefaultHeaders(headers)
+                .build();
+
+        CloseableHttpResponse response = httpclient.execute(httpGet);
+
+        return response;
+    }
+
+    public void closeClient() throws IOException {
 		if (httpclient != null) {
 			httpclient.close();
 		}

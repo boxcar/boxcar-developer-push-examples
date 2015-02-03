@@ -4,10 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 
-import io.boxcar.publisher.client.PublisherClient;
-import io.boxcar.publisher.client.builder.PublishStrategy;
+import io.boxcar.publisher.client.APIClient;
+import io.boxcar.publisher.client.builder.RequestStrategy;
 import io.boxcar.publisher.model.Alert;
 import io.boxcar.publisher.model.Tag;
 
@@ -39,9 +40,9 @@ public class Demo {
 	 */
 	public static void main(String[] args) {
 		
-		PublisherClient publisherClient = null;
+		APIClient apiClient = null;
 		
-		// 1. Build the publisher client
+		// 1. Build the api client
 		
 		try {
 
@@ -50,17 +51,26 @@ public class Demo {
             PUBLISH_KEY = properties.getProperty(PROP_PUBLISH_KEY);
             PUBLISH_SECRET = properties.getProperty(PROP_PUBLISH_SECRET);
 
-			publisherClient = new PublisherClient(properties, PUBLISH_KEY, PUBLISH_SECRET,
-					PublishStrategy.URL_SIGNATURE);
+			apiClient = new APIClient(properties, PUBLISH_KEY, PUBLISH_SECRET,
+					RequestStrategy.URL_SIGNATURE);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
         // 2. Publish
+
         try {
             StringBuffer text = getText(args);
-            sendPush(text.toString(), "android", 120, publisherClient);
+            sendPush(text.toString(), "android", 120, apiClient);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        // 3. Get tags
+        try {
+            List<Tag> tags = getTags(apiClient);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -68,7 +78,7 @@ public class Demo {
 
 	}
 
-    private static void sendPush(String text, String targetOS, int ttl, PublisherClient publisherClient) {
+    private static void sendPush(String text, String targetOS, int ttl, APIClient apiClient) {
         try {
             Alert alert = new Alert(text);
             // remove this line if you just want to send it to all registered
@@ -78,7 +88,7 @@ public class Demo {
             // available
             alert.setTTL(ttl);
 
-            int id = publisherClient.publish(alert);
+            int id = apiClient.publish(alert);
 
             logger.debug("Push sent with id " + id);
         } catch (IOException e) {
@@ -86,18 +96,40 @@ public class Demo {
         }
     }
 
-    private static void createTag(String tagName, PublisherClient publisherClient) {
+    private static void createTag(String tagName, APIClient apiClient) {
         try {
 
             Tag tag = new Tag(tagName);
 
-            int id = publisherClient.createTag(tag);
+            int id = apiClient.createTag(tag);
 
             logger.debug("Tag " + tag.getName() + " created with id " + id);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+
+    private static List<Tag> getTags(APIClient apiClient) {
+        List<Tag> tags = null;
+
+        try {
+            // FIXME: creation date is not being parsed
+            tags = apiClient.getTags();
+
+            logger.debug("Available tags on SaaS: ");
+            for (Tag tag : tags) {
+                logger.debug("Tag " + tag.getName() + " - id " + tag.getId()
+                                    + " - created at : " + tag.getCreationDate()
+                                    + " - devices: " + tag.getDevices()
+                                    + " - deprecated: " + tag.isDeprecated());
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return tags;
     }
 
 	private static Properties loadProperties() throws IOException {

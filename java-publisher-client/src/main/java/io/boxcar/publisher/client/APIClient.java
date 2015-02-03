@@ -3,6 +3,8 @@ package io.boxcar.publisher.client;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.http.HttpEntity;
@@ -13,8 +15,9 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import io.boxcar.publisher.client.builder.PublishStrategy;
+import io.boxcar.publisher.client.builder.RequestStrategy;
 import io.boxcar.publisher.client.builder.impl.BasicAuthPublishStrategy;
 import io.boxcar.publisher.client.builder.impl.UrlSignaturePublishStrategy;
 import io.boxcar.publisher.model.Alert;
@@ -27,11 +30,11 @@ import io.boxcar.publisher.model.Tag;
  * @author jpcarlino
  *
  */
-public class PublisherClient {
+public class APIClient {
 	
 	static Logger logger;
 	static {
-		logger = Logger.getLogger(PublisherClient.class);
+		logger = Logger.getLogger(APIClient.class);
 	}
 
     static final String PROP_PUSH_URL = "io.boxcar.publisher.push.url";
@@ -39,25 +42,25 @@ public class PublisherClient {
 
 	String publishKey;
 	String publishSecret;
-	PublishStrategy publishStrategy;
+	RequestStrategy requestStrategy;
     Properties urls;
 
-	public PublisherClient(Properties urls, String publishKey, String publishSecret) {
+	public APIClient(Properties urls, String publishKey, String publishSecret) {
 		this.urls = urls;
 		this.publishKey = publishKey;
 		this.publishSecret = publishSecret;
-		this.publishStrategy = new BasicAuthPublishStrategy();
+		this.requestStrategy = new BasicAuthPublishStrategy();
 	}
 
-	public PublisherClient(Properties urls, String publishKey, String publishSecret, int requestType) {
+	public APIClient(Properties urls, String publishKey, String publishSecret, int requestType) {
 		this.urls = urls;
 		this.publishKey = publishKey;
 		this.publishSecret = publishSecret;
 		
-		if (requestType == PublishStrategy.URL_SIGNATURE) {
-			this.publishStrategy = new UrlSignaturePublishStrategy();
+		if (requestType == RequestStrategy.URL_SIGNATURE) {
+			this.requestStrategy = new UrlSignaturePublishStrategy();
 		} else {
-			this.publishStrategy = new BasicAuthPublishStrategy();
+			this.requestStrategy = new BasicAuthPublishStrategy();
 		}
 	}
 
@@ -81,6 +84,58 @@ public class PublisherClient {
         return create(tag, PROP_TAG_MANAGER_URL);
     }
 
+    /**
+     * Retrieves all the tags available for the given project
+     * @return all existing tags
+     */
+    public List<Tag> getTags() throws IOException {
+        /*
+         * JSONTagList = [{struct, [{"id", Id},
+         *                {"tag", Tag},
+         *                {"created_at", datetime_to_json(CreatedAt)},
+         *                {"devices", DeviceCount},
+         *                {"deprecated", Deprecated}]} ]
+         *
+	     * JSON = mochijson:encode({struct, [{"tags", {array, JSONTagList}}]}),
+         */
+        URI url = getURL(PROP_TAG_MANAGER_URL);
+        Gson gson = new Gson();
+
+        CloseableHttpResponse response = requestStrategy.get(
+                new HashMap<String, String>(), url, publishKey, publishSecret);
+
+        try {
+            StatusLine statusLine = response.getStatusLine();
+            logger.debug(statusLine);
+            HttpEntity entity = response.getEntity();
+            String entityStr = EntityUtils.toString(entity);
+            logger.debug(entityStr);
+            int status = statusLine.getStatusCode();
+            if (status == 200) {
+                List<Tag> tags = gson.fromJson(entityStr, new TypeToken<List<Tag>>() {
+                }.getType());
+                return tags;
+            } else {
+                String reasonPhrase = statusLine.getReasonPhrase();
+                try {
+                    // lets try to parse the error as json {"error":"cause"}
+                    // if it fails, use the HTTP reason phrase
+                    Result error = gson.fromJson(entityStr, Result.class);
+                    reasonPhrase = error.getError();
+                } catch (Exception e) {
+                }
+                logger.debug("Throwing error with status: " + status + " - reason: " + reasonPhrase);
+                throw new HttpResponseException(status, reasonPhrase);
+            }
+        } finally {
+            try {
+                response.close();
+            } catch (Exception e) {}
+            requestStrategy.closeClient();
+        }
+
+    }
+
     private <T> int create(T model, String url) throws IOException {
         Result result = post(model, getURL(url), Result.class);
         return Integer.valueOf(result.getOk());
@@ -91,7 +146,7 @@ public class PublisherClient {
         Gson gson = new Gson();
         String jsonPayload = gson.toJson(model);
 
-        CloseableHttpResponse response = publishStrategy.post(
+        CloseableHttpResponse response = requestStrategy.post(
                 jsonPayload, url, publishKey, publishSecret);
 
         try {
@@ -118,8 +173,8 @@ public class PublisherClient {
         } finally {
             try {
                 response.close();
-            } catch (IOException e) {}
-            publishStrategy.closeClient();
+            } catch (Exception e) {}
+            requestStrategy.closeClient();
         }
     }
 
