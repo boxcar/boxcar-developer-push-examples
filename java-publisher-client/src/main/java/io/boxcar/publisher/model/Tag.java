@@ -1,5 +1,7 @@
 package io.boxcar.publisher.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Date;
 
 /**
@@ -11,14 +13,15 @@ public class Tag {
     String name;
     Integer devices;
     Boolean deprecated;
-    Date creationDate;
+    @SerializedName("created_at")
+    Date createdAt;
 
     public Tag(String name) {
         this.name = name;
         id = null;
         devices = null;
         deprecated = null;
-        creationDate = null;
+        createdAt = null;
     }
 
     public int getId() {
@@ -53,12 +56,12 @@ public class Tag {
         this.deprecated = deprecated;
     }
 
-    public Date getCreationDate() {
-        return creationDate;
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 
 }

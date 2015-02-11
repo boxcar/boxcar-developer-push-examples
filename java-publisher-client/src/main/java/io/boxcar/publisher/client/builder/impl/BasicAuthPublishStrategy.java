@@ -15,6 +15,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -127,6 +128,53 @@ public class BasicAuthPublishStrategy implements RequestStrategy {
                 .build();
 
         CloseableHttpResponse response = httpclient.execute(httpGet, context);
+
+        return response;
+    }
+
+    @Override
+    public CloseableHttpResponse delete(Map<String, String> content, URI baseUrl, String publishKey, String publishSecret) throws IOException {
+        URIBuilder uriBuilder = new URIBuilder(baseUrl);
+
+        for (Map.Entry<String, String> entry : content.entrySet()) {
+            uriBuilder.addParameter(entry.getKey(), entry.getValue());
+        }
+
+        URI url = null;
+
+        try {
+            url = uriBuilder.build();
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        logger.debug("DELETE request URL: " + url);
+
+        HttpDelete httpDelete = new HttpDelete(url);
+
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+                new AuthScope(getHost(url), getPort(url)),
+                new UsernamePasswordCredentials(publishKey, publishSecret));
+
+        Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(header);
+
+        AuthCache authCache = new BasicAuthCache();
+        BasicScheme basicAuth = new BasicScheme();
+        authCache.put(URIUtils.extractHost(url), basicAuth);
+
+        HttpClientContext context = HttpClientContext.create();
+        context.setCredentialsProvider(credsProvider);
+        context.setAuthCache(authCache);
+
+        CloseableHttpClient httpclient = HttpClients.custom()
+                .setDefaultCredentialsProvider(credsProvider)
+                .setDefaultHeaders(headers)
+                .build();
+
+        CloseableHttpResponse response = httpclient.execute(httpDelete, context);
 
         return response;
     }

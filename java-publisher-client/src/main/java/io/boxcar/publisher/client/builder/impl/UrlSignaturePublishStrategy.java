@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -43,7 +44,7 @@ public class UrlSignaturePublishStrategy implements RequestStrategy {
 		StringEntity content;
 		content = new StringEntity(body);
 
-        logger.debug("Request body: " + body);
+        logger.trace("Request body: " + body);
 		
 		URI uriWithURLParams;
 		try {
@@ -91,7 +92,7 @@ public class UrlSignaturePublishStrategy implements RequestStrategy {
         String signature = Signature.sign("GET", url.getHost(), url.getPath(),
                                           payload, publishSecret);
 
-        logger.debug("GET request URL: " + url);
+        logger.trace("GET request URL: " + url);
 
         URI uriWithURLParams;
         try {
@@ -113,6 +114,52 @@ public class UrlSignaturePublishStrategy implements RequestStrategy {
                 .build();
 
         CloseableHttpResponse response = httpclient.execute(httpGet);
+
+        return response;
+    }
+
+    @Override
+    public CloseableHttpResponse delete(Map<String, String> content, URI baseUrl, String publishKey, String publishSecret) throws IOException {
+        URIBuilder uriBuilder = new URIBuilder(baseUrl);
+
+        for (Map.Entry<String, String> entry : content.entrySet()) {
+            uriBuilder.addParameter(entry.getKey(), entry.getValue());
+        }
+
+        URI url = null;
+
+        try {
+            url = uriBuilder.build();
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        String payload = "";
+        String signature = Signature.sign("DELETE", url.getHost(), url.getPath(),
+                payload, publishSecret);
+
+        logger.trace("DELETE request URL: " + url);
+
+        URI uriWithURLParams;
+        try {
+            uriWithURLParams = new URI(url.getScheme(),
+                    url.getAuthority(), url.getPath(),
+                    String.format("publishkey=%s&signature=%s", publishKey, signature),
+                    url.getFragment());
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+
+        Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(header);
+
+        HttpDelete httpDelete = new HttpDelete(uriWithURLParams);
+
+        httpclient = HttpClients.custom().setDefaultHeaders(headers)
+                .build();
+
+        CloseableHttpResponse response = httpclient.execute(httpDelete);
 
         return response;
     }

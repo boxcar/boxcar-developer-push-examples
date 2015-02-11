@@ -15,5 +15,8 @@ public interface RequestStrategy {
 			String publishSecret) throws IOException;
     CloseableHttpResponse get(Map<String, String> content, URI baseUrl, String publishKey,
                                String publishSecret) throws IOException;
+    CloseableHttpResponse delete(Map<String, String> content, URI baseUrl, String publishKey,
+                              String publishSecret) throws IOException;
+
 	void closeClient() throws IOException;
 }

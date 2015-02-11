@@ -62,15 +62,47 @@ public class Demo {
 
         try {
             StringBuffer text = getText(args);
-            sendPush(text.toString(), "android", 120, apiClient);
+            int id = sendPush(text.toString(), "android", 120, apiClient);
+            logger.debug("Push sent with id " + id);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
 
-        // 3. Get tags
+        // 3. List tags
         try {
             List<Tag> tags = getTags(apiClient);
+            logger.debug("Available tags on SaaS: ");
+            for (Tag tag : tags) {
+                logger.debug("Tag " + tag.getName() + " - id " + tag.getId()
+                        + " - created at : " + tag.getCreatedAt()
+                        + " - devices: " + tag.getDevices()
+                        + " - deprecated: " + tag.isDeprecated());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        // 4. Create, get, deprecate and remove a tag
+        try {
+            String tagName = "api-test";
+            int id = createTag(tagName, apiClient);
+            logger.debug("Tag " + tagName + " created with id " + id);
+            Tag tag = getTag(id, apiClient);
+            logger.debug("Tag " + tag.getName() + " - id " + tag.getId()
+                    + " - created at : " + tag.getCreatedAt()
+                    + " - devices: " + tag.getDevices()
+                    + " - deprecated: " + tag.isDeprecated());
+            deprecateTag(id, apiClient);
+            logger.debug("Tag with id " + id + " was deprecated");
+            tag = getTag(id, apiClient);
+            logger.debug("Tag " + tag.getName() + " - id " + tag.getId()
+                    + " - created at : " + tag.getCreatedAt()
+                    + " - devices: " + tag.getDevices()
+                    + " - deprecated: " + tag.isDeprecated());
+            deleteTag(id, apiClient);
+            logger.debug("Tag with id " + id + " was removed");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -78,58 +110,44 @@ public class Demo {
 
 	}
 
-    private static void sendPush(String text, String targetOS, int ttl, APIClient apiClient) {
-        try {
-            Alert alert = new Alert(text);
-            // remove this line if you just want to send it to all registered
-            // devices
-            alert.setTargetOS(targetOS);
-            // do not keep the push more than 2 minutes if device is not
-            // available
-            alert.setTTL(ttl);
+    private static int sendPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
+        Alert alert = new Alert(text);
+        // remove this line if you just want to send it to all registered
+        // devices
+        alert.setTargetOS(targetOS);
+        // do not keep the push more than 2 minutes if device is not
+        // available
+        alert.setTTL(ttl);
 
-            int id = apiClient.publish(alert);
-
-            logger.debug("Push sent with id " + id);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return apiClient.publish(alert);
     }
 
-    private static void createTag(String tagName, APIClient apiClient) {
-        try {
+    private static int createTag(String tagName, APIClient apiClient) throws IOException {
+        Tag tag = new Tag(tagName);
 
-            Tag tag = new Tag(tagName);
+        int id = apiClient.createTag(tag);
 
-            int id = apiClient.createTag(tag);
-
-            logger.debug("Tag " + tag.getName() + " created with id " + id);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        return id;
     }
 
-    private static List<Tag> getTags(APIClient apiClient) {
+    private static void deprecateTag(int id, APIClient apiClient) throws IOException {
+        apiClient.deprecateTag(id);
+    }
+
+    private static void deleteTag(int id, APIClient apiClient) throws IOException {
+        apiClient.deleteTag(id);
+    }
+
+    private static List<Tag> getTags(APIClient apiClient) throws IOException {
         List<Tag> tags = null;
 
-        try {
-            // FIXME: creation date is not being parsed
-            tags = apiClient.getTags();
-
-            logger.debug("Available tags on SaaS: ");
-            for (Tag tag : tags) {
-                logger.debug("Tag " + tag.getName() + " - id " + tag.getId()
-                                    + " - created at : " + tag.getCreationDate()
-                                    + " - devices: " + tag.getDevices()
-                                    + " - deprecated: " + tag.isDeprecated());
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        tags = apiClient.getTags();
 
         return tags;
+    }
+
+    private static Tag getTag(int id, APIClient apiClient) throws IOException {
+        return apiClient.getTag(id);
     }
 
 	private static Properties loadProperties() throws IOException {
