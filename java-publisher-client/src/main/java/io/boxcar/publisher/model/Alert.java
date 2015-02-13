@@ -12,16 +12,23 @@ import com.google.gson.annotations.SerializedName;
  * @author jpcarlino
  *
  */
-public class Alert {
-	
-	public class Aps {
+public class Alert<T> {
+
+	public static class I18nAlert {
+        @SerializedName("loc-key")
+        public String key;
+        @SerializedName("loc-args")
+        public String[] args;
+    }
+
+	public class Aps<T> {
 		String badge;
 		String sound;
 		String category;
-		String alert;
+		T alert;
 	}
 	
-	Aps aps;
+	Aps<T> aps;
 	List<String> tags;
 	List<String> target_os;
 	List<Integer> client_ids;
@@ -33,12 +40,12 @@ public class Alert {
 	@SerializedName("@img")
 	String img;
 
-	public Alert(String text) {
-		this.aps = new Aps();
+	public Alert(T content) {
+		this.aps = new Aps<T>();
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
 		this.aps.category = null;
-		this.aps.alert = text;
+		this.aps.alert = content;
 		this.tags = new ArrayList<String>();
 		this.tags.add("@all");
 		this.id = null;
@@ -50,12 +57,12 @@ public class Alert {
 		setAPICallTimeToLive(30000);
 	}
 	
-	public Alert(String text, String id) {
-		this.aps = new Aps();
+	public Alert(T content, String id) {
+		this.aps = new Aps<T>();
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
 		this.aps.category = null;
-		this.aps.alert = text;
+		this.aps.alert = content;
 		this.tags = new ArrayList<String>();
 		this.tags.add("@all");
 		this.id = id;
@@ -67,12 +74,12 @@ public class Alert {
 		setAPICallTimeToLive(30000);
 	}
 
-	public String getAlert() {
+	public T getAlert() {
 		return aps.alert;
 	}
 
-	public void setAlert(String alert) {
-		aps.alert = alert;
+	public void setAlert(T content) {
+		aps.alert = content;
 	}
 	
 	public String getSound() {
@@ -121,7 +128,7 @@ public class Alert {
 	 * Amazon ADM, etc) to know how much time to keep the push if device
 	 * is offline.
 	 * Ignored if value <= 0
-	 * @param millis TTL in milliseconds. It won't be considered for delivery
+	 * @param seconds TTL in seconds. It won't be considered for delivery
 	 * if <= 0
 	 */
 	public void setTTL(int seconds) {

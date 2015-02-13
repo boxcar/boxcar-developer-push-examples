@@ -111,7 +111,7 @@ public class Demo {
 	}
 
     private static int sendPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
-        Alert alert = new Alert(text);
+        Alert<String> alert = new Alert<String>(text);
         // remove this line if you just want to send it to all registered
         // devices
         alert.setTargetOS(targetOS);
@@ -159,6 +159,7 @@ public class Demo {
 	
 	private static StringBuffer getText(String[] args) throws IOException {
 		StringBuffer text = new StringBuffer();
+        String defaultText = "Hello World!";
 		if (args.length > 0) {
 			if (args[0].toLowerCase().trim().equals("--file")) {
 				String filename = args[1].trim();
@@ -173,10 +174,10 @@ public class Demo {
 			} else if (args[0].toLowerCase().trim().equals("--text")) {
 				text.append(args[1].trim());
 			} else {
-				text.append("Hello World!");
+				text.append(defaultText);
 			}
 		} else {
-			text.append("Hello World!");
+			text.append(defaultText);
 		}
 		return text;
 	}
