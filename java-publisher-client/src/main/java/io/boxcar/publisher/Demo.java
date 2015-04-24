@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -118,6 +119,35 @@ public class Demo {
         // do not keep the push more than 2 minutes if device is not
         // available
         alert.setTTL(ttl);
+
+        List<String> tags = new ArrayList<String>();
+        // send push to all registered devices
+        tags.add(Alert.ALL_PUSH_TAG);
+        alert.setTags(tags);
+
+        return apiClient.publish(alert);
+    }
+
+    private static int sendSegmentPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
+        Alert<String> alert = new Alert<String>(text);
+        // remove this line if you just want to send it to all registered
+        // devices
+        alert.setTargetOS(targetOS);
+        // do not keep the push more than 2 minutes if device is not
+        // available
+        alert.setTTL(ttl);
+
+        // push to all devices that didn't open the app since
+        // last day (last 24 hours).
+        List<Alert.BehaviorSegment> segments = new ArrayList<Alert.BehaviorSegment>();
+        Alert.BehaviorSegment segment = new Alert.BehaviorSegment(Alert.Behavior.last_app_open,
+                new Alert.BehaviorSegment.Interval(Alert.IntervalUnit.day, 1));
+        // we are interested on devices that did NOT open the app, so we want to exclude devices
+        // that did match the above interval
+        segment.setExclude(true);
+        segments.add(segment);
+
+        alert.setBehaviorSegments(segments);
 
         return apiClient.publish(alert);
     }

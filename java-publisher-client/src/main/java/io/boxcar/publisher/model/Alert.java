@@ -14,6 +14,8 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Alert<T> {
 
+    public static final String ALL_PUSH_TAG = "@all";
+
 	public static class I18nAlert {
         @SerializedName("loc-key")
         public String key;
@@ -27,8 +29,49 @@ public class Alert<T> {
 		String category;
 		T alert;
 	}
-	
+
+    public enum Behavior {
+        last_app_open, last_app_registered
+    }
+
+    public enum IntervalUnit {
+        day, month
+    }
+
+    public static class BehaviorSegment {
+        public static class Interval {
+            Integer value;
+            IntervalUnit unit;
+
+            public Interval(IntervalUnit unit, Integer value) {
+                this.unit = unit;
+                this.value = value;
+            }
+        }
+
+        public BehaviorSegment(Behavior behavior, Interval interval) {
+            this.behavior = behavior;
+            this.interval = interval;
+            this.exclude = false;
+        }
+        Behavior behavior;
+        boolean exclude;
+        Interval interval;
+
+        public boolean isExclude() {
+            return exclude;
+        }
+
+        public void setExclude(boolean exclude) {
+            this.exclude = exclude;
+        }
+
+    }
+
 	Aps<T> aps;
+
+    @SerializedName("behavior_segments")
+    List<BehaviorSegment> segments;
 	List<String> tags;
 	List<String> target_os;
 	List<Integer> client_ids;
@@ -47,13 +90,13 @@ public class Alert<T> {
 		this.aps.category = null;
 		this.aps.alert = content;
 		this.tags = new ArrayList<String>();
-		this.tags.add("@all");
 		this.id = null;
 		this.target_os = null;
 		this.client_ids = null;
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
 		this.img = null;
+        this.segments = null;
 		setAPICallTimeToLive(30000);
 	}
 	
@@ -64,13 +107,13 @@ public class Alert<T> {
 		this.aps.category = null;
 		this.aps.alert = content;
 		this.tags = new ArrayList<String>();
-		this.tags.add("@all");
 		this.id = id;
 		this.target_os = null;
 		this.client_ids = null;
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
 		this.img = null;
+        this.segments = null;
 		setAPICallTimeToLive(30000);
 	}
 
@@ -178,9 +221,17 @@ public class Alert<T> {
 	public void setBigImageURL(String url) {
 		this.img = url;
 	}
-	
+
+    public List<BehaviorSegment> getBehaviorSegments() {
+        return segments;
+    }
+
+    public void setBehaviorSegments(List<BehaviorSegment> segments) {
+        this.segments = segments;
+    }
+
 	protected void setAPICallTimeToLive(long millis) {
 		this.expires = TimeUtils.getExpiryDate(millis).getTime() / 1000;
 	}
-	
+
 }
