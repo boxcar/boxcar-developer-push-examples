@@ -39,6 +39,8 @@ public class Notifications extends Activity {
         });
 
         zeroPush.registerForRemoteNotifications();
+        //uncomment the line below to register device to a channel, replace userid with required channel string
+        //zeroPush.registerDeviceTokenToChannel(zeroPush.getDeviceToken(),"userid");
         activateStrictMode();
     }
 
