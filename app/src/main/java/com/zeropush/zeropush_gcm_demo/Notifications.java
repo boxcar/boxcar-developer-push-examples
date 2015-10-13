@@ -1,6 +1,7 @@
 package com.zeropush.zeropush_gcm_demo;
 
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.os.StrictMode;
 import android.os.Build;
 
@@ -10,44 +11,93 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.zeropush.sdk.ZeroPush;
-import com.zeropush.sdk.ZeroPushResponseHandler;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
-import org.apache.http.Header;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import io.boxcar.push.Boxcar;
+import io.boxcar.push.eventbus.event.RegistrationFailedEvent;
+import io.boxcar.push.eventbus.event.RegistrationSuccessEvent;
+import io.boxcar.push.gateway.GooglePlayPushException;
 
 public class Notifications extends Activity {
 
-    private ZeroPush zeroPush;
+    public static final String TAG;
+
+    static {
+        TAG = "DemoApp";
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
-        zeroPush = new ZeroPush("zeropush-app-token", "gcm-project-number", this);
-        zeroPush.verifyCredentials(new ZeroPushResponseHandler(){
-            @Override
-            public void handle(JSONObject response, int statusCode, Error error) {
-                if(error != null) {
-                    Log.e("DemoApp", error.getMessage());
-                    return;
-                }
-                Log.d("DemoApp", response.toString());
-            }
-        });
 
-        zeroPush.registerForRemoteNotifications();
-        //uncomment the line below to register device to a channel, replace userid with required channel string
-        //zeroPush.registerDeviceTokenToChannel(zeroPush.getDeviceToken(),"userid");
+        if (MigratorIntentService.appUnregisteredFromZeroPush(this)) {
+            DemoApplication.registerBoxcar(this);
+        } else {
+            try {
+                MigratorIntentService.startActionMigrate(this);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to migrate app", e);
+            }
+        }
+
         activateStrictMode();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Boxcar.unregisterSubscriber(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        //zeroPush.registerForRemoteNotifications();
+        Boxcar.registerSubscriber(this);
+    }
+
+    /**
+     * This is a callback method used by Boxcar SDK to notify when a
+     * registration request finished successfully.
+     * @param event the registration event, including current token and
+     *              deprecated channels (if any)
+     */
+    /*
+     * We mark this method as 'unused' although this is not true. However
+     * runtime code inspection can't detect this is method is invoked
+     * dynamically (reflection) by EventBus
+     */
+    @SuppressWarnings("unused")
+    public void onEventMainThread(RegistrationFailedEvent event) {
+        try {
+            throw event.getError();
+        } catch (GooglePlayPushException e) {
+			/*
+			 * We got an error during registration. If this is a Google
+			 * Android device, check if Google Play APK is installed.
+			 */
+            final Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(e.getErrorCode(), this, 9000);
+            if (errorDialog != null) {
+                errorDialog.show();
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "Error trying to register into Boxcar Universal Push Service", t);
+        }
+    }
+
+    /**
+     * This is a callback method used by Boxcar SDK to notify when a
+     * registration request failed.
+     * @param event the failure event
+     */
+    /*
+     * We mark this method as 'unused' although this is not true. However
+     * runtime code inspection can't detect this is method is invoked
+     * dynamically (reflection) by EventBus
+     */
+    @SuppressWarnings("unused")
+    public void onEventMainThread(RegistrationSuccessEvent event) {
+        Log.d(TAG, "Registered on Boxcar Universal Push Service with token " + event.getToken());
     }
 
     @Override
