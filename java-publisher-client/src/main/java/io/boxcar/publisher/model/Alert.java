@@ -34,6 +34,10 @@ public class Alert<T> {
         last_app_open, last_app_registered
     }
 
+    public enum Priority {
+        high, normal
+    }
+
     public enum IntervalUnit {
         day, month
     }
@@ -79,6 +83,7 @@ public class Alert<T> {
 	long expires;
 	Integer expires_after;
 	List<String> device_tokens;
+        Priority notification_priority;
 	
 	@SerializedName("@img")
 	String img;
@@ -96,7 +101,8 @@ public class Alert<T> {
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
 		this.img = null;
-        this.segments = null;
+		this.segments = null;
+                this.notification_priority = null;
 		setAPICallTimeToLive(30000);
 	}
 	
@@ -113,6 +119,7 @@ public class Alert<T> {
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
 		this.img = null;
+                this.notification_priority = null;
         this.segments = null;
 		setAPICallTimeToLive(30000);
 	}
@@ -222,6 +229,13 @@ public class Alert<T> {
 		this.img = url;
 	}
 
+        public Priority getNotificationPriority() {
+		return notification_priority;
+        }
+
+        public void setNotificationPriority(Priority notificationPriority) {
+		this.notification_priority = notificationPriority;
+        }
     public List<BehaviorSegment> getBehaviorSegments() {
         return segments;
     }

@@ -125,6 +125,10 @@ public class Demo {
         tags.add(Alert.ALL_PUSH_TAG);
         alert.setTags(tags);
 
+        // make this push 'normal' priority, meaning the gateway (GCM, APNS)
+        // could delay it if device is sleeping
+        alert.setNotificationPriority(Alert.Priority.normal);
+
         return apiClient.publish(alert);
     }
 
