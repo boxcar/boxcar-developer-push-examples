@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -109,6 +111,17 @@ public class Demo {
             System.exit(1);
         }
 
+        // 5. Schedule a push
+        try {
+            Calendar later = (Calendar) Calendar.getInstance().clone();
+            later.add(Calendar.MINUTE, 15);
+            Date scheduledAt = later.getTime();
+            int id = schedulePush("This is a scheduled push", scheduledAt, "android", 120, apiClient);
+            logger.debug("Push scheduled with id " + id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 	}
 
     private static int sendPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
@@ -132,6 +145,30 @@ public class Demo {
         return apiClient.publish(alert);
     }
 
+    private static int schedulePush(String text, Date scheduledAt, String targetOS, int ttl,
+    		APIClient apiClient) throws IOException {
+        Alert<String> alert = new Alert<String>(text);
+        // remove this line if you just want to send it to all registered
+        // devices
+        alert.setTargetOS(targetOS);
+        // do not keep the push more than 2 minutes if device is not
+        // available
+        alert.setTTL(ttl);
+
+        List<String> tags = new ArrayList<String>();
+        // send push to all registered devices
+        tags.add(Alert.ALL_PUSH_TAG);
+        alert.setTags(tags);
+
+        // make this push 'normal' priority, meaning the gateway (GCM, APNS)
+        // could delay it if device is sleeping
+        alert.setNotificationPriority(Alert.Priority.normal);
+
+        alert.setScheduledAt(scheduledAt);
+        
+        return apiClient.publish(alert);
+    }
+    
     private static int sendSegmentPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
         Alert<String> alert = new Alert<String>(text);
         // remove this line if you just want to send it to all registered

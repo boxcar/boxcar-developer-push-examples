@@ -3,6 +3,7 @@ package io.boxcar.publisher.model;
 import io.boxcar.publisher.client.util.TimeUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
@@ -83,7 +84,9 @@ public class Alert<T> {
 	long expires;
 	Integer expires_after;
 	List<String> device_tokens;
-        Priority notification_priority;
+	Priority notification_priority;
+	@SerializedName("scheduled_at")
+	Date scheduledAt;
 	
 	@SerializedName("@img")
 	String img;
@@ -102,7 +105,8 @@ public class Alert<T> {
 		this.expires_after = null; // do not set TTL by default
 		this.img = null;
 		this.segments = null;
-                this.notification_priority = null;
+		this.notification_priority = null;
+		this.scheduledAt = null;
 		setAPICallTimeToLive(30000);
 	}
 	
@@ -119,8 +123,9 @@ public class Alert<T> {
 		this.device_tokens = null;
 		this.expires_after = null; // do not set TTL by default
 		this.img = null;
-                this.notification_priority = null;
+		this.notification_priority = null;
         this.segments = null;
+        this.scheduledAt = null;
 		setAPICallTimeToLive(30000);
 	}
 
@@ -229,13 +234,14 @@ public class Alert<T> {
 		this.img = url;
 	}
 
-        public Priority getNotificationPriority() {
-		return notification_priority;
-        }
+	public Priority getNotificationPriority() {
+	return notification_priority;
+	}
+	
+	public void setNotificationPriority(Priority notificationPriority) {
+	this.notification_priority = notificationPriority;
+	}
 
-        public void setNotificationPriority(Priority notificationPriority) {
-		this.notification_priority = notificationPriority;
-        }
     public List<BehaviorSegment> getBehaviorSegments() {
         return segments;
     }
@@ -246,6 +252,14 @@ public class Alert<T> {
 
 	protected void setAPICallTimeToLive(long millis) {
 		this.expires = TimeUtils.getExpiryDate(millis).getTime() / 1000;
+	}
+
+	public Date getScheduledAt() {
+		return scheduledAt;
+	}
+
+	public void setScheduledAt(Date scheduledAt) {
+		this.scheduledAt = scheduledAt;
 	}
 
 }

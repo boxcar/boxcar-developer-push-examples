@@ -29,7 +29,7 @@ import com.google.gson.reflect.TypeToken;
 import io.boxcar.publisher.client.builder.RequestStrategy;
 import io.boxcar.publisher.client.builder.impl.BasicAuthPublishStrategy;
 import io.boxcar.publisher.client.builder.impl.UrlSignaturePublishStrategy;
-import io.boxcar.publisher.client.util.DateTimeDeserializer;
+import io.boxcar.publisher.client.util.DateTimeConverter;
 import io.boxcar.publisher.model.Alert;
 import io.boxcar.publisher.model.Result;
 import io.boxcar.publisher.model.Tag;
@@ -298,6 +298,6 @@ public class APIClient {
 
     private void initGsonBuilder() {
         this.gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(Date.class, new DateTimeDeserializer());
+        gsonBuilder.registerTypeAdapter(Date.class, new DateTimeConverter());
     }
 }
