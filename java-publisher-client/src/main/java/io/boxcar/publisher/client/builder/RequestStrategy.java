@@ -13,10 +13,11 @@ public interface RequestStrategy {
 	
 	CloseableHttpResponse post(String content, URI baseUrl, String publishKey,
 			String publishSecret) throws IOException;
-    CloseableHttpResponse get(Map<String, String> content, URI baseUrl, String publishKey,
+    CloseableHttpResponse get(Map<String, String> params, URI baseUrl, String publishKey,
                                String publishSecret) throws IOException;
     CloseableHttpResponse delete(Map<String, String> content, URI baseUrl, String publishKey,
                               String publishSecret) throws IOException;
-
+    CloseableHttpResponse put(String content, URI baseUrl, String publishKey,
+    		String publishSecret) throws IOException;
 	void closeClient() throws IOException;
 }

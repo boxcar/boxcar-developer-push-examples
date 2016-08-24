@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,10 +18,6 @@ import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
 import io.boxcar.publisher.client.builder.RequestStrategy;
@@ -31,7 +25,9 @@ import io.boxcar.publisher.client.builder.impl.BasicAuthPublishStrategy;
 import io.boxcar.publisher.client.builder.impl.UrlSignaturePublishStrategy;
 import io.boxcar.publisher.client.util.DateTimeConverter;
 import io.boxcar.publisher.model.Alert;
+import io.boxcar.publisher.model.ListPage;
 import io.boxcar.publisher.model.Result;
+import io.boxcar.publisher.model.PushInfo;
 import io.boxcar.publisher.model.Tag;
 
 /**
@@ -41,7 +37,7 @@ import io.boxcar.publisher.model.Tag;
  *
  */
 public class APIClient {
-	
+
 	static Logger logger;
 	static {
 		logger = Logger.getLogger(APIClient.class);
@@ -68,7 +64,7 @@ public class APIClient {
 		this.urls = urls;
 		this.publishKey = publishKey;
 		this.publishSecret = publishSecret;
-		
+
 		if (requestType == RequestStrategy.URL_SIGNATURE) {
 			this.requestStrategy = new UrlSignaturePublishStrategy();
 		} else {
@@ -83,8 +79,62 @@ public class APIClient {
      * @return the id of the newly created push
      * @throws IOException
      */
-    public int publish(Alert alert) throws IOException {
+    public int publish(Alert<?> alert) throws IOException {
         return create(alert, PROP_PUSH_URL);
+    }
+
+    public void updatePush(int id, Alert<?> alert) throws IOException {
+        URI url = getURL(PROP_PUSH_URL, id);
+
+        Gson gson = gsonBuilder.create();
+        String jsonPayload = gson.toJson(alert);
+
+        CloseableHttpResponse response = requestStrategy.put(jsonPayload, url, publishKey,
+        		publishSecret);
+
+        try {
+            StatusLine statusLine = response.getStatusLine();
+            logger.trace(statusLine);
+            int status = statusLine.getStatusCode();
+            if (status == 204) {
+                return;
+            } else {
+                String reasonPhrase = statusLine.getReasonPhrase();
+                try {
+                    // lets try to parse the error as json {"error":"cause"}
+                    // if it fails, use the HTTP reason phrase
+                    gson = gsonBuilder.create();
+                    HttpEntity entity = response.getEntity();
+                    String entityStr = EntityUtils.toString(entity);
+                    logger.trace(entityStr);
+                    Result error = gson.fromJson(entityStr, Result.class);
+                    reasonPhrase = error.getError();
+                } catch (Exception e) {
+                }
+                throw new HttpResponseException(status, reasonPhrase);
+            }
+        } finally {
+            try {
+                response.close();
+            } catch (Exception e) {}
+            requestStrategy.closeClient();
+        }
+    }
+    
+    public PushInfo getPush(int id) throws IOException {
+    	URI url = getURL(PROP_PUSH_URL,id);
+    	PushInfo result = this.get(url, new HashMap<String,String>(), PushInfo.class);
+    	return result;
+    }
+    
+    public ListPage<PushInfo> getScheduledPushes(int offset) throws IOException {
+    	URI url = getURL(PROP_PUSH_URL);
+    	TypeToken<ListPage<PushInfo>> pushList = new TypeToken<ListPage<PushInfo>>() {};
+    	HashMap<String, String> params = new HashMap<String, String>();
+    	params.put("offset", Integer.toString(offset));
+    	params.put("type","scheduled");
+    	ListPage<PushInfo> result = get(url, params, pushList.getType());
+    	return result;
     }
 
     /**
@@ -186,7 +236,41 @@ public class APIClient {
             } catch (Exception e) {}
             requestStrategy.closeClient();
         }
+    }
 
+	public void deleteScheduledPush(int id) throws IOException {
+        URI url = getURL(PROP_PUSH_URL, id);
+
+        CloseableHttpResponse response = requestStrategy.delete(
+                new HashMap<String, String>(), url, publishKey, publishSecret);
+
+        try {
+            StatusLine statusLine = response.getStatusLine();
+            logger.trace(statusLine);
+            int status = statusLine.getStatusCode();
+            if (status == 204) {
+                return;
+            } else {
+                String reasonPhrase = statusLine.getReasonPhrase();
+                try {
+                    // lets try to parse the error as json {"error":"cause"}
+                    // if it fails, use the HTTP reason phrase
+                    Gson gson = gsonBuilder.create();
+                    HttpEntity entity = response.getEntity();
+                    String entityStr = EntityUtils.toString(entity);
+                    logger.trace(entityStr);
+                    Result error = gson.fromJson(entityStr, Result.class);
+                    reasonPhrase = error.getError();
+                } catch (Exception e) {
+                }
+                throw new HttpResponseException(status, reasonPhrase);
+            }
+        } finally {
+            try {
+                response.close();
+            } catch (Exception e) {}
+            requestStrategy.closeClient();
+        }
     }
 
     private <T> int create(T model, String url) throws IOException {
@@ -234,6 +318,7 @@ public class APIClient {
         Gson gson = gsonBuilder.create();
         String jsonPayload = gson.toJson(model);
 
+        logger.trace("sending POST to URL " + url.toString());
         CloseableHttpResponse response = requestStrategy.post(
                 jsonPayload, url, publishKey, publishSecret);
 

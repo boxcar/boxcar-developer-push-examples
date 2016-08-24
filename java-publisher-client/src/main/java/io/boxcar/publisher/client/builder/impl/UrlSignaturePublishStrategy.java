@@ -13,6 +13,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -72,11 +73,11 @@ public class UrlSignaturePublishStrategy implements RequestStrategy {
 	}
 
     @Override
-    public CloseableHttpResponse get(Map<String, String> content, URI baseUrl, String publishKey, String publishSecret) throws IOException {
+    public CloseableHttpResponse get(Map<String, String> params, URI baseUrl, String publishKey, String publishSecret) throws IOException {
 
         URIBuilder uriBuilder = new URIBuilder(baseUrl);
 
-        for (Map.Entry<String, String> entry : content.entrySet()) {
+        for (Map.Entry<String, String> entry : params.entrySet()) {
             uriBuilder.addParameter(entry.getKey(), entry.getValue());
         }
 
@@ -94,28 +95,25 @@ public class UrlSignaturePublishStrategy implements RequestStrategy {
 
         logger.trace("GET request URL: " + url);
 
-        URI uriWithURLParams;
-        try {
-            uriWithURLParams = new URI(url.getScheme(),
-                    url.getAuthority(), url.getPath(),
-                    String.format("publishkey=%s&signature=%s", publishKey, signature),
-                    url.getFragment());
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
-
+        uriBuilder.addParameter("publishkey", publishKey);
+        uriBuilder.addParameter("signature", signature);
+ 
         Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         List<Header> headers = new ArrayList<Header>();
         headers.add(header);
 
-        HttpGet httpGet = new HttpGet(uriWithURLParams);
-
-        httpclient = HttpClients.custom().setDefaultHeaders(headers)
-                .build();
-
-        CloseableHttpResponse response = httpclient.execute(httpGet);
-
-        return response;
+        try {
+	        HttpGet httpGet = new HttpGet(uriBuilder.build());
+	
+	        httpclient = HttpClients.custom().setDefaultHeaders(headers)
+	                .build();
+	
+	        CloseableHttpResponse response = httpclient.execute(httpGet);
+	
+	        return response;        
+        } catch (URISyntaxException e) {
+        	throw new IOException(e);
+        }
     }
 
     @Override
@@ -163,6 +161,41 @@ public class UrlSignaturePublishStrategy implements RequestStrategy {
 
         return response;
     }
+
+	public CloseableHttpResponse put(String body, URI url,
+			String publishKey, String publishSecret) throws IOException {
+		String signature = Signature.sign("PUT", url.getHost(),
+				url.getPath(), body, publishSecret);
+		
+		StringEntity content;
+		content = new StringEntity(body);
+
+        logger.trace("PUT request body: " + body);
+		
+		URI uriWithURLParams;
+		try {
+			uriWithURLParams = new URI(url.getScheme(),
+					url.getAuthority(), url.getPath(),
+					String.format("publishkey=%s&signature=%s", publishKey, signature),
+					url.getFragment());
+		} catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
+	
+        Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(header);
+		
+		HttpPut httpPut = new HttpPut(uriWithURLParams);
+		httpPut.setEntity(content);
+
+        httpclient = HttpClients.custom().setDefaultHeaders(headers)
+        		.build();
+
+		CloseableHttpResponse response = httpclient.execute(httpPut);
+		
+		return response;
+	}
 
     public void closeClient() throws IOException {
 		if (httpclient != null) {

@@ -18,6 +18,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URIUtils;
@@ -83,13 +84,13 @@ public class BasicAuthPublishStrategy implements RequestStrategy {
 	}
 
     @Override
-    public CloseableHttpResponse get(Map<String, String> content, URI baseUrl,
+    public CloseableHttpResponse get(Map<String, String> params, URI baseUrl,
                                      String publishKey, String publishSecret)
             throws IOException {
 
         URIBuilder uriBuilder = new URIBuilder(baseUrl);
 
-        for (Map.Entry<String, String> entry : content.entrySet()) {
+        for (Map.Entry<String, String> entry : params.entrySet()) {
             uriBuilder.addParameter(entry.getKey(), entry.getValue());
         }
 
@@ -178,6 +179,44 @@ public class BasicAuthPublishStrategy implements RequestStrategy {
 
         return response;
     }
+
+    @Override
+	public CloseableHttpResponse put(String body, URI url, String publishKey, String publishSecret)
+			throws IOException {
+		StringEntity content;
+		content = new StringEntity(body);
+		
+		logger.debug("PUT request body: " + body);
+		
+		HttpPut httpPut = new HttpPut(url);
+		httpPut.setEntity(content);
+
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+        		new AuthScope(getHost(url), getPort(url)),
+                new UsernamePasswordCredentials(publishKey, publishSecret));
+        
+        Header header = new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(header);
+        
+        AuthCache authCache = new BasicAuthCache();
+        BasicScheme basicAuth = new BasicScheme();
+        authCache.put(URIUtils.extractHost(url), basicAuth);
+        
+        HttpClientContext context = HttpClientContext.create();
+        context.setCredentialsProvider(credsProvider);
+        context.setAuthCache(authCache);
+        
+        CloseableHttpClient httpclient = HttpClients.custom()
+                .setDefaultCredentialsProvider(credsProvider)
+                .setDefaultHeaders(headers)
+                .build();
+
+		CloseableHttpResponse response = httpclient.execute(httpPut, context);
+		
+		return response;
+	}
 
     public void closeClient() throws IOException {
 		if (httpclient != null) {

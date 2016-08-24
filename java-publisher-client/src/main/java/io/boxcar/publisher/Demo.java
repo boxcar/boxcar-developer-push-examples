@@ -13,15 +13,17 @@ import java.util.Properties;
 import io.boxcar.publisher.client.APIClient;
 import io.boxcar.publisher.client.builder.RequestStrategy;
 import io.boxcar.publisher.model.Alert;
+import io.boxcar.publisher.model.ListPage;
+import io.boxcar.publisher.model.PushInfo;
 import io.boxcar.publisher.model.Tag;
 
 /**
  * This is the main entry point to execut the demo application.
- * 
+ *
  * This demo just connects with the Boxcar Universal Push Notification
  * Platform and publishes a "Hello World" content to all Android devices
- * using the URL signature authorization method. 
- * 
+ * using the URL signature authorization method.
+ *
  * @author jpcarlino
  *
  */
@@ -42,11 +44,11 @@ public class Demo {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		
+
 		APIClient apiClient = null;
-		
+
 		// 1. Build the api client
-		
+
 		try {
 
 			Properties properties = loadProperties();
@@ -116,12 +118,57 @@ public class Demo {
             Calendar later = (Calendar) Calendar.getInstance().clone();
             later.add(Calendar.MINUTE, 15);
             Date scheduledAt = later.getTime();
-            int id = schedulePush("This is a scheduled push", scheduledAt, "android", 120, apiClient);
+            Alert<String> alert = buildScheduledPush("This is a scheduled push",
+
+            scheduledAt, "android", 120);
+            int id = apiClient.publish(alert);
             logger.debug("Push scheduled with id " + id);
+
+            // 6. Get push info
+            logger.debug("Get push info for id " + id);
+            try {
+              PushInfo info = apiClient.getPush(id);
+              logger.debug("Info about recently created push: " + info);
+            } catch (Exception e) {
+              e.printStackTrace();
+
+            };
+
+            // 7. List all scheduled pushes
+            logger.debug("List all scheduled pushes");
+            try {
+              ListPage<PushInfo> page;
+              boolean eol = false;
+              int offset = 0;
+              while (!eol) {
+                page = apiClient.getScheduledPushes(offset);
+                for (PushInfo pushInfo : page.getItems()) {
+                  logger.debug(pushInfo);
+                }
+                offset += page.getItems().size();
+                eol = page.getItems().size() < page.getPageSize();
+              }
+            } catch(Exception e) {
+              e.printStackTrace();
+            };
+
+            // 7. Update push
+            logger.debug("Update scheduled push with id " + id);
+            // Delay alert 15 minutes more
+            later.add(Calendar.MINUTE, 15);
+            alert.setScheduledAt(later.getTime());
+            // And change text
+            alert.setAlert("This is a nice scheduled push");
+            apiClient.updatePush(id, alert);
+
+            // 8. Remove the push we have just scheduled
+            deleteScheduledPush(id, apiClient);
+            logger.debug("Push scheduled with id " + id + " was removed");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
+
 	}
 
     private static int sendPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
@@ -145,8 +192,8 @@ public class Demo {
         return apiClient.publish(alert);
     }
 
-    private static int schedulePush(String text, Date scheduledAt, String targetOS, int ttl,
-    		APIClient apiClient) throws IOException {
+    private static Alert<String> buildScheduledPush(String text, Date scheduledAt,
+      String targetOS, int ttl) {
         Alert<String> alert = new Alert<String>(text);
         // remove this line if you just want to send it to all registered
         // devices
@@ -165,10 +212,14 @@ public class Demo {
         alert.setNotificationPriority(Alert.Priority.normal);
 
         alert.setScheduledAt(scheduledAt);
-        
-        return apiClient.publish(alert);
+
+        return alert;
     }
-    
+
+    private static void deleteScheduledPush(int pushId, APIClient apiClient) throws IOException {
+        apiClient.deleteScheduledPush(pushId);
+    }
+
     private static int sendSegmentPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
         Alert<String> alert = new Alert<String>(text);
         // remove this line if you just want to send it to all registered
@@ -227,7 +278,7 @@ public class Demo {
 		properties.load(fileUrl);
         return properties;
 	}
-	
+
 	private static StringBuffer getText(String[] args) throws IOException {
 		StringBuffer text = new StringBuffer();
         String defaultText = "Hello World!";
