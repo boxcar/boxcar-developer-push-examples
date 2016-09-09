@@ -1,6 +1,7 @@
 package io.boxcar.publisher.model;
 
 import io.boxcar.publisher.client.util.TimeUtils;
+import io.boxcar.publisher.model.Alert.Tags;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,6 +18,9 @@ public class Alert<T> {
 
     public static final String ALL_PUSH_TAG = "@all";
 
+    public static final String TAG_MATCH_OP_OR = "or";
+    public static final String TAG_MATCH_OP_AND = "and";
+
 	public static class I18nAlert {
         @SerializedName("loc-key")
         public String key;
@@ -29,6 +33,40 @@ public class Alert<T> {
 		String sound;
 		String category;
 		T alert;
+	}
+
+	public interface Tags {
+		public List<String> getTags();
+		public void setTags(List<String> tags);
+	}
+
+
+	public class TagsOr implements Tags {
+		List<String> or;
+		public TagsOr() {
+			this.or = new ArrayList<String>();
+		}
+		public List<String> getTags() {
+			return or;
+		}
+
+		public void setTags(List<String> tags) {
+			this.or = tags;
+		}
+
+	}
+
+	public class TagsAnd implements Tags {
+		List<String> and;
+		public TagsAnd() {
+			this.and = new ArrayList<String>();
+		}
+		public List<String> getTags() {
+			return and;
+		}
+		public void setTags(List<String> tags) {
+			this.and = tags;
+		}
 	}
 
     public enum Behavior {
@@ -77,7 +115,7 @@ public class Alert<T> {
 
     @SerializedName("behavior_segments")
     List<BehaviorSegment> segments;
-	List<String> tags;
+	Tags tags;
 	List<String> target_os;
 	List<Integer> client_ids;
 	String id;
@@ -87,7 +125,7 @@ public class Alert<T> {
 	Priority notification_priority;
 	@SerializedName("scheduled_at")
 	Date scheduledAt;
-	
+
 	@SerializedName("@img")
 	String img;
 
@@ -97,7 +135,7 @@ public class Alert<T> {
 		this.aps.sound = "beep.wav";
 		this.aps.category = null;
 		this.aps.alert = content;
-		this.tags = new ArrayList<String>();
+		this.tags = new TagsOr();
 		this.id = null;
 		this.target_os = null;
 		this.client_ids = null;
@@ -109,14 +147,14 @@ public class Alert<T> {
 		this.scheduledAt = null;
 		setAPICallTimeToLive(30000);
 	}
-	
+
 	public Alert(T content, String id) {
 		this.aps = new Aps<T>();
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
 		this.aps.category = null;
 		this.aps.alert = content;
-		this.tags = new ArrayList<String>();
+		this.tags = new TagsOr();
 		this.id = id;
 		this.target_os = null;
 		this.client_ids = null;
@@ -136,7 +174,7 @@ public class Alert<T> {
 	public void setAlert(T content) {
 		aps.alert = content;
 	}
-	
+
 	public String getSound() {
 		return aps.sound;
 	}
@@ -152,7 +190,7 @@ public class Alert<T> {
 	public void setCategory(String category) {
 		aps.category = category;
 	}
-	
+
 	public String getBadge() {
 		return aps.badge;
 	}
@@ -160,13 +198,22 @@ public class Alert<T> {
 	public void setBadge(String badge) {
 		aps.badge = badge;
 	}
-	
+
 	public List<String> getTags() {
-		return tags;
+		return tags.getTags();
 	}
 
 	public void setTags(List<String> tags) {
-		this.tags = tags;
+		this.tags.setTags(tags);
+	}
+
+	public void setTags(List<String> tags, String type) {
+		if (type.equals(TAG_MATCH_OP_OR)) {
+			this.tags = new TagsOr();
+		} else {
+			this.tags = new TagsAnd();
+		}
+		this.setTags(tags);
 	}
 
 	public String getId() {
@@ -189,14 +236,14 @@ public class Alert<T> {
 	public void setTTL(int seconds) {
 		this.expires_after = seconds;
 	}
-	
+
 	public int getTTL() {
 		if (expires_after == null) {
 			return -1;
 		}
 		return this.expires_after;
 	}
-	
+
 	public List<String> getTargetOS() {
 		return target_os;
 	}
@@ -204,7 +251,7 @@ public class Alert<T> {
 	public void setTargetOS(List<String> targetOS) {
 		this.target_os = targetOS;
 	}
-	
+
 	public void setTargetOS(String targetOS) {
 		this.target_os = new ArrayList<String>();
 		this.target_os.add(targetOS);
@@ -237,7 +284,7 @@ public class Alert<T> {
 	public Priority getNotificationPriority() {
 	return notification_priority;
 	}
-	
+
 	public void setNotificationPriority(Priority notificationPriority) {
 	this.notification_priority = notificationPriority;
 	}

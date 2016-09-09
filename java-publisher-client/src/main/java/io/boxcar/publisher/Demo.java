@@ -204,8 +204,9 @@ public class Demo {
 
         List<String> tags = new ArrayList<String>();
         // send push to all registered devices
-        tags.add(Alert.ALL_PUSH_TAG);
-        alert.setTags(tags);
+        tags.add("test-channel");
+        tags.add("dev-channel");
+        alert.setTags(tags, Alert.TAG_MATCH_OP_AND);
 
         // make this push 'normal' priority, meaning the gateway (GCM, APNS)
         // could delay it if device is sleeping
