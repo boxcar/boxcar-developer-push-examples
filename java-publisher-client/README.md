@@ -56,8 +56,9 @@ It is possible that you find an exception similar to this when running the API c
 
 This is by the fact that StartSSL is not trusted by default as a certification authority by the Oracle JDK. In that case you will need to add the root certificate as follows:
 
-1. Download the root certificate from StartSSL (ca.crt)
+#### 1. Download the root certificate from StartSSL (ca.crt)
         $ wget https://www.startssl.com/certs/ca.crt
-2. Find what is the keystore file used by your Java JVM. Usually it can be found on $JAVA_HOME/jre/lib/security/cacerts
-3. Add the contents of ca.crt to the Java keystore:
+#### 2. Find where is the keystore file used by your Java JVM.
+Usually it can be found on $JAVA_HOME/jre/lib/security/cacerts
+#### 3. Add the contents of ca.crt to the Java keystore:
         $ keytool -import -trustcacerts -alias startsslca -file ca.crt -keystore $JAVA_HOME/jre/lib/security/cacerts
