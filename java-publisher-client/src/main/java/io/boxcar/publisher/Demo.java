@@ -180,6 +180,11 @@ public class Demo {
         // available
         alert.setTTL(ttl);
 
+        // Uncomment this line if you prefer to implicitly create tags
+        // if there are tags passed on this alert that do not
+        // exist on the project
+        //alert.setImplicitTagCreation(true);
+
         List<String> tags = new ArrayList<String>();
         // send push to all registered devices
         tags.add(Alert.ALL_PUSH_TAG);

@@ -125,6 +125,8 @@ public class Alert<T> {
 	Priority notification_priority;
 	@SerializedName("scheduled_at")
 	Date scheduledAt;
+  @SerializedName("implicit_tag_creation")
+  boolean implicitTagCreation;
 
 	@SerializedName("@img")
 	String img;
@@ -309,4 +311,11 @@ public class Alert<T> {
 		this.scheduledAt = scheduledAt;
 	}
 
+  public boolean getImplicitTagCreation() {
+    return implicitTagCreation;
+  }
+
+  public void setImplicitTagCreation(boolean implicitTagCreation) {
+    this.implicitTagCreation = implicitTagCreation;
+  }
 }
