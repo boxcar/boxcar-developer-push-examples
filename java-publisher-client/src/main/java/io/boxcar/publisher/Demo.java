@@ -171,8 +171,16 @@ public class Demo {
 
 	}
 
-    private static int sendPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
-        Alert<String> alert = new Alert<String>(text);
+	private static int sendPush(String text, String targetOS, int ttl, APIClient apiClient) throws IOException {
+		return sendPush(text,null,targetOS,ttl,apiClient);
+	}
+
+	private static int sendPush(String text, String imgUrl, String targetOS, int ttl, APIClient apiClient) throws IOException {
+		Alert<String> alert = new Alert<String>(text);
+		if (imgUrl != null) {
+			alert.setMutableContent(true);
+			alert.setBigImageURL(imgUrl);
+		}
         // remove this line if you just want to send it to all registered
         // devices
         alert.setTargetOS(targetOS);

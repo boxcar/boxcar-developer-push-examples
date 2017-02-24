@@ -32,6 +32,8 @@ public class Alert<T> {
 		String badge;
 		String sound;
 		String category;
+		@SerializedName("mutable-content")
+		Integer mutableContent;
 		T alert;
 	}
 
@@ -136,6 +138,7 @@ public class Alert<T> {
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
 		this.aps.category = null;
+		this.aps.mutableContent = null;
 		this.aps.alert = content;
 		this.tags = new TagsOr();
 		this.id = null;
@@ -155,6 +158,7 @@ public class Alert<T> {
 		this.aps.badge = "auto";
 		this.aps.sound = "beep.wav";
 		this.aps.category = null;
+		this.aps.mutableContent = null;
 		this.aps.alert = content;
 		this.tags = new TagsOr();
 		this.id = id;
@@ -191,6 +195,14 @@ public class Alert<T> {
 
 	public void setCategory(String category) {
 		aps.category = category;
+	}
+
+	public boolean mutableContent() {
+		return aps.mutableContent != null && aps.mutableContent.intValue() == 1;
+	}
+
+	public void setMutableContent(boolean mutableContent) {
+		aps.mutableContent = mutableContent ? 1 : 0;
 	}
 
 	public String getBadge() {
